@@ -820,3 +820,27 @@ createGetCovariateSettings <- function(covariateSettingsCm = FeatureExtraction::
   return(res)
 
 }
+
+
+#' @title Create map matrix
+#'
+#' @description Creates a map matrix for treatments (exposures) and outcomes to be passed to
+#' \code{\link[RiskStratifiedEstimation]{createAnalysisSettings}}.
+#'
+#' @param id     The exposure/outcome id (numeric)
+#' @param name   The exposure/outcome name (string)
+#' @param type   Whether it is an "exposure" or "outcome"
+#'
+#' @export
+
+createAnalysisMapMatrix <- function(id, name, type) {
+  if (!(type %in% c("outcome", "exposure"))) {
+    stop("Type needs to be either 'outcome' or 'exposure'")
+  }
+  idCol <- paste(type, "id", sep = "_")
+  nameCol <- paste(type, "name", sep  = "_")
+  mapResult <- data.frame(id, name)
+  colnames(mapResult) <- c(idCol, nameCol)
+
+  return(mapResult)
+}
