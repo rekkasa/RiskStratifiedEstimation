@@ -63,9 +63,9 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Study example</h1>
                         <h4 data-toc-skip class="author">Alexandros
-Rekkas and Peter R. Rijnbeek</h4>
+Rekkas</h4>
             
-            <h4 data-toc-skip class="date">2023-02-22</h4>
+            <h4 data-toc-skip class="date">2023-02-23</h4>
       
       
       <div class="d-none name"><code>StudyExample.Rmd</code></div>
@@ -148,35 +148,31 @@ definitions are available online <a href="https://github.com/OHDSI/Legend" class
 </h2>
 <p>To implement the study we need to define the following settings:</p>
 <ol style="list-style-type: decimal">
-<li><code>connectionDetails</code></li>
-<li><code>analysisSettings</code></li>
-<li><code>databaseSettings</code></li>
-<li><code>getDataSettings</code></li>
-<li><code>covariateSettings</code></li>
-<li><code>populationSettings</code></li>
+<li>
+<code>analysisSettings</code>: Information regarding the analysis,
+including an analysis ID, the database name, IDs of the treatment and
+comparator cohorts, etc.</li>
+<li>
+<code>connectionDetails</code>: User information for connecting to a
+database.</li>
+<li>
+<code>databaseSettings</code>: Information regarding the database
+and the tables where the cohorts of the study are stored.</li>
+<li>
+<code>getDataSettings</code>: Settings regarding the extraction of
+the data from the database.</li>
+<li>
+<code>covariateSettings</code>: Settings for the extraction of
+patient characteristics.</li>
+<li>
+<code>populationSettings</code>: Settings for the definition of
+the</li>
 <li><code>runSettings</code></li>
 </ol>
 <div class="section level3">
 <h3 id="cohort-instantiation">Cohort instantiation<a class="anchor" aria-label="anchor" href="#cohort-instantiation"></a>
 </h3>
 <p>Similar to PLP package</p>
-</div>
-<div class="section level3">
-<h3 id="study-script-creation">Study script creation<a class="anchor" aria-label="anchor" href="#study-script-creation"></a>
-</h3>
-<p>In this section we assume that our cohorts have been created and have
-been extracted using a specific database. Then we can proceed with the
-creation of the script that will perform the defined study. For this
-part 7 types of input need to be created:</p>
-<ul>
-<li>connection details</li>
-<li>anlaysis settings</li>
-<li>database settings</li>
-<li>Settnigs for getting the data</li>
-<li>covariate settings</li>
-<li>population settings</li>
-<li>run settings</li>
-</ul>
 <div class="section level4">
 <h4 id="analysis-settnigs">Analysis settnigs<a class="anchor" aria-label="anchor" href="#analysis-settnigs"></a>
 </h4>
@@ -184,36 +180,49 @@ part 7 types of input need to be created:</p>
 of the study and can be used to identify it. The analysis id is
 a–pereferably–unique identifier of the present study. The treatment
 cohort id refers to the unique identifier of the treatment cohort
-definition. In our case, that is <span class="math inline">\(1001\)</span> and refers to the extracted
-hypertensive patients receving ACE-inhibitors. The comparator cohort id
+definition. In our case, that is 1001 and refers to the extracted
+hypertensive patients receiving ACE-inhibitors. The comparator cohort id
 refers to the unique identifier of the comparator cohort. In our case
-this is <span class="math inline">\(1002\)</span> and refers to the
-extracted cohort of hypertensive patients receiving beta blockers; the
-outcome ids that refer to the unique identifiers of the outcome cohorts.
-A very important characteristic of the analysis settings is the analysis
-matrix, that dictates which comparisons are to be made. The columns of
-this square boolean matrix refer to risk stratification outcomes and the
-rows to estimation outcomes. Therefore, the default diagonal matrix
-defines the following analyses:</p>
-<ul>
-<li>Within strata of CVD risk estimate relative and absolute treatment
-effects of CVD events.</li>
-<li>Within strata of acute myocardial infarction risk estimate relative
-and absolute treatment effects of acute myocardial infarction
-events.</li>
-</ul>
+this is 1002 and refers to the extracted cohort of hypertensive patients
+receiving beta blockers; the outcome ids that refer to the unique
+identifiers of the outcome cohorts.</p>
+<p>A very important characteristic of the analysis settings is the
+analysis matrix, that dictates which comparisons are to be made. The
+columns of this square boolean matrix refer to risk stratification
+outcomes and the rows to estimation outcomes. Therefore, if we set
+<code>outcomeIds = c(101, 102)</code>, the matrix <span class="math inline">\(\big(\begin{smallmatrix}  1 &amp; 0\\  1 &amp; 0
+\end{smallmatrix}\big)\)</span> defines the analysis: <em>“within strata
+of acute MI risk, estimate relative and absolute treatment effects of
+acute MI and hospitalization with heart failure”</em>.</p>
 <p>We can create the analysis settings using the following code:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>analysisSettings <span class="ot">&lt;-</span> <span class="fu">createAnalysisSettings</span> (</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">analysisId =</span> <span class="st">"vignette_demonstration"</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">analysisType =</span> <span class="st">"stratifyByPs"</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">description =</span> <span class="st">"description text"</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatmentCohortId =</span> <span class="dv">1001</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">comparatorCohortId =</span> <span class="dv">1002</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">outcomeIds =</span> <span class="fu">c</span>(<span class="dv">131</span>, <span class="dv">102</span>),</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">analysisMatrix =</span> <span class="fu">diag</span>(<span class="dv">2</span>)),</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>verbosity <span class="ot">=</span> <span class="st">"INFO"</span>,</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>saveDirectory <span class="ot">=</span> <span class="st">"path/to/save/directory"</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="er">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Create reference dataframe with treatment ids and names</span>
+<span class="va">map_treatments</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createAnalysisMapMatrix.html">createAnalysisMapMatrix</a></span><span class="op">(</span>
+  id   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1001</span>, <span class="fl">1002</span><span class="op">)</span>,
+  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Thiazide or thiazide-like diuretics"</span>, <span class="st">"ACE inhibitors"</span><span class="op">)</span>,
+  type <span class="op">=</span> <span class="st">"exposure"</span>
+<span class="op">)</span>
+
+<span class="co"># Create reference dataframe with outcome ids and names</span>
+<span class="va">map_outcomes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createAnalysisMapMatrix.html">createAnalysisMapMatrix</a></span><span class="op">(</span>
+  id   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">101</span>, <span class="fl">102</span><span class="op">)</span>,
+  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Acute MI"</span>, <span class="st">"Hospitalization with heart failure"</span><span class="op">)</span>,
+  type <span class="op">=</span> <span class="st">"outcome"</span>
+<span class="op">)</span>
+
+<span class="va">analysisSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createAnalysisSettings.html">createAnalysisSettings</a></span> <span class="op">(</span>
+  analysisId         <span class="op">=</span> <span class="fl">1234</span>,
+  databaseName       <span class="op">=</span> <span class="st">"name_of_database"</span>,
+  treatmentCohortId  <span class="op">=</span> <span class="fl">1001</span>,
+  comparatorCohortId <span class="op">=</span> <span class="fl">1002</span>,
+  outcomeIds         <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">101</span>, <span class="fl">102</span><span class="op">)</span>,
+  analysisMatrix     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,
+  mapTreatments      <span class="op">=</span> <span class="va">map_treatments</span>,
+  mapOutcomes        <span class="op">=</span> <span class="va">map_outcomes</span>,
+  saveDirectory      <span class="op">=</span> <span class="st">"path/to/results"</span>,
+  verbosity          <span class="op">=</span> <span class="st">"INFO"</span>,
+  balanceThreads     <span class="op">=</span> <span class="fl">1</span>
+<span class="op">)</span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="connection-details">Connection details<a class="anchor" aria-label="anchor" href="#connection-details"></a>

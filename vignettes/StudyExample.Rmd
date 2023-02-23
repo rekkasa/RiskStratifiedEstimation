@@ -1,6 +1,6 @@
 ---
 title: "Study example"
-author: "Alexandros Rekkas and Peter R. Rijnbeek"
+author: "Alexandros Rekkas"
 date: "`r Sys.Date()`"
 output:
   pdf_document:
@@ -86,36 +86,57 @@ database.
 ## Cohort instantiation
 Similar to PLP package
 
-## Study script creation
-In this section we assume that our cohorts have been created and have been extracted using a specific database. Then  we can proceed with the creation of the script that will perform the defined study. For this part 7 types of input need to be created:
-
-- connection details
-- anlaysis settings
-- database settings
-- Settnigs for getting the data
-- covariate settings
-- population settings
-- run settings
-
 ### Analysis settnigs
-The analysis settings refer to information that define the structure of the study and can be used to identify it. The analysis id is a--pereferably--unique identifier of the present study. The treatment cohort id refers to the unique identifier of the treatment cohort definition. In our case, that is $1001$ and refers to the extracted hypertensive patients receving ACE-inhibitors. The comparator cohort id refers to the unique identifier of the comparator cohort. In our case this is $1002$ and refers to the extracted cohort of hypertensive patients receiving beta blockers; the outcome ids that refer to the unique identifiers of the outcome cohorts. A very important characteristic of the analysis settings is the analysis matrix, that dictates which comparisons are to be made. The columns of this square boolean matrix refer to risk stratification outcomes and the rows to estimation outcomes. Therefore, the default diagonal matrix defines the following analyses:
+The analysis settings refer to information that define the structure of the
+study and can be used to identify it. The analysis id is a--pereferably--unique
+identifier of the present study. The treatment cohort id refers to the unique
+identifier of the treatment cohort definition. In our case, that is 1001 and
+refers to the extracted hypertensive patients receiving ACE-inhibitors. The
+comparator cohort id refers to the unique identifier of the comparator cohort.
+In our case this is 1002 and refers to the extracted cohort of hypertensive
+patients receiving beta blockers; the outcome ids that refer to the unique
+identifiers of the outcome cohorts. 
 
-- Within strata of CVD risk estimate relative and absolute treatment effects of CVD events.
-- Within strata of acute myocardial infarction risk estimate relative and absolute treatment effects of acute myocardial infarction events.
+A very important characteristic of the analysis settings is the analysis matrix,
+that dictates which comparisons are to be made. The columns of this square
+boolean matrix refer to risk stratification outcomes and the rows to estimation
+outcomes. Therefore, if we set `outcomeIds = c(101, 102)`, the matrix
+$\big(\begin{smallmatrix}
+  1 & 0\\
+  1 & 0
+\end{smallmatrix}\big)$
+defines the analysis: _"within strata of acute MI risk, estimate relative and
+absolute treatment effects of acute MI and hospitalization with heart failure"_.
 
 We can create the analysis settings using the following code:
 
 ```{r tidy=FALSE, eval=FALSE}
+# Create reference dataframe with treatment ids and names
+map_treatments <- createAnalysisMapMatrix(
+  id   = c(1001, 1002),
+  name = c("Thiazide or thiazide-like diuretics", "ACE inhibitors"),
+  type = "exposure"
+)
+
+# Create reference dataframe with outcome ids and names
+map_outcomes <- createAnalysisMapMatrix(
+  id   = c(101, 102),
+  name = c("Acute MI", "Hospitalization with heart failure"),
+  type = "outcome"
+)
+
 analysisSettings <- createAnalysisSettings (
-  analysisId = "vignette_demonstration",
-  analysisType = "stratifyByPs",
-  description = "description text",
-  treatmentCohortId = 1001,
+  analysisId         = 1234,
+  databaseName       = "name_of_database",
+  treatmentCohortId  = 1001,
   comparatorCohortId = 1002,
-  outcomeIds = c(131, 102),
-  analysisMatrix = diag(2)),
-verbosity = "INFO",
-saveDirectory = "path/to/save/directory"
+  outcomeIds         = c(101, 102),
+  analysisMatrix     = matrix(c(1, 1, 0, 0), ncol = 2),
+  mapTreatments      = map_treatments,
+  mapOutcomes        = map_outcomes,
+  saveDirectory      = "path/to/results",
+  verbosity          = "INFO",
+  balanceThreads     = 1
 )
 ```
 
